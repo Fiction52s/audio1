@@ -1,0 +1,7 @@
+﻿  main.cpp
+main.cpp(137): warning C4305: '=': truncation from 'double' to 'float'
+  Generating code
+  All 14 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  audio1.vcxproj -> c:\users\ficti\documents\visual studio 2015\Projects\audio1\Release\audio1.exe
+  audio1.vcxproj -> c:\users\ficti\documents\visual studio 2015\Projects\audio1\Release\audio1.pdb (Full PDB)

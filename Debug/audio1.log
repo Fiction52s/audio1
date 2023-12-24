@@ -1,0 +1,4 @@
+﻿  main.cpp
+c:\users\ficti\documents\visual studio 2015\projects\audio1\audio1\main.cpp(137): warning C4305: '=': truncation from 'double' to 'float'
+  audio1.vcxproj -> c:\users\ficti\documents\visual studio 2015\Projects\audio1\Debug\audio1.exe
+  audio1.vcxproj -> c:\users\ficti\documents\visual studio 2015\Projects\audio1\Debug\audio1.pdb (Partial PDB)
