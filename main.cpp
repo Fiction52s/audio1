@@ -80,7 +80,7 @@ using namespace sf;
 #define M_PI  (3.14159265)
 #endif
 
-#define TABLE_SIZE   (1024)//(200)
+#define TABLE_SIZE   (200)//(1024)//(200)
 typedef struct
 {
 	float sine[TABLE_SIZE];
@@ -95,9 +95,14 @@ paTestData;
 ** that could mess up the system like calling malloc() or free().
 */
 
+#define MIDDLE_C (261.626)
+#define A4 (440.0)
+
 static float xxx = .01f;
 static int xx = 1;
 static float hmm = 1.0f;
+static unsigned long n = 0;
+static float currFreq = A4;
 
 static int patestCallback(const void *inputBuffer, void *outputBuffer,
 	unsigned long framesPerBuffer,
@@ -118,19 +123,28 @@ static int patestCallback(const void *inputBuffer, void *outputBuffer,
 
 	for (i = 0; i<framesPerBuffer; i++)
 	{
+
+		//data.sine[i] = (float)sin(((double)i / (double)TABLE_SIZE) * M_PI * 2.);
+		//float v = sin(261.626 * 2 * M_PI * ((float)n / (float)TABLE_SIZE));
+		float v = sin(currFreq * 2 * M_PI * ((float)n / (float)SAMPLE_RATE));
+		*out++ = v;
+		*out++ = v;
+
 		leftTest = data->sine[data->left_phase];
 		rightTest = data->sine[data->right_phase];
 
 		leftTest *= hmm;
 		rightTest *= hmm;
 
-		*out++ = leftTest;
-		*out++ = rightTest;
+		//*out++ = leftTest;
+		//*out++ = rightTest;
 
 		data->left_phase += xx;
 		if (data->left_phase >= TABLE_SIZE) data->left_phase -= TABLE_SIZE;
 		data->right_phase += xx;
 		if (data->right_phase >= TABLE_SIZE) data->right_phase -= TABLE_SIZE;
+
+		++n;
 	}
 
 	return paContinue;
@@ -226,7 +240,14 @@ int main(void)
 
 	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML works!");
 	sf::CircleShape shape(100.f);
+
+	sf::Font font;
+	font.loadFromFile("Kinetic_Font_01.ttf"); //each panel loads the font separately, this is bad
 	shape.setFillColor(sf::Color::Green);
+
+	sf::Text text;
+	text.setFont(font);
+	text.setCharacterSize(50);
 
 	while (window.isOpen())
 	{
@@ -238,22 +259,36 @@ int main(void)
 		}
 
 		Vector2i pos = sf::Mouse::getPosition();
-		float test = pos.x;
+		float test = max( 0, pos.x);
+		test = min(test, 1920.f);
 
-		float total = test * .00001;
+		float minValue = .1;
+		float total = test * .00001 + minValue;
 		xxx = total;
+
+		
 
 		float test2 = pos.y;
 		float total2 = pos.y * .001;
 
 		int testxx = round(pos.x / 25);
 
+		currFreq = A4 + pos.x;
+
+		testxx = max(0, testxx);
+
 		xx = testxx;
 
-		hmm = pos.y / 1080.f;
+		text.setString("currFreq: " + to_string(currFreq));
+
+		/*hmm = pos.y / 1080.f;
+		if (hmm < 1.f / 1080.f)
+			hmm = 1.f / 1080.f;*/
+		hmm = .36;//4.f;
 
 		window.clear();
 		window.draw(shape);
+		window.draw(text);
 		window.display();
 	}
 
