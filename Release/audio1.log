@@ -1,7 +1,14 @@
 ﻿  main.cpp
-main.cpp(137): warning C4305: '=': truncation from 'double' to 'float'
+main.cpp(117): warning C4101: 'xTest': unreferenced local variable
+main.cpp(241): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+main.cpp(243): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+main.cpp(246): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+main.cpp(247): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+main.cpp(249): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
   Generating code
-  All 14 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  2 of 16 functions (12.5%) were compiled, the rest were copied from previous compilation.
+    1 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   audio1.vcxproj -> c:\users\ficti\documents\visual studio 2015\Projects\audio1\Release\audio1.exe
   audio1.vcxproj -> c:\users\ficti\documents\visual studio 2015\Projects\audio1\Release\audio1.pdb (Full PDB)

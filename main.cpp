@@ -69,6 +69,9 @@
 #include "portaudio.h"
 #include <SFML\Graphics.hpp>
 
+using namespace std;
+using namespace sf;
+
 #define NUM_SECONDS   (5)
 #define SAMPLE_RATE   (44100)
 #define FRAMES_PER_BUFFER  (256)
@@ -77,12 +80,12 @@
 #define M_PI  (3.14159265)
 #endif
 
-#define TABLE_SIZE   (200)
+#define TABLE_SIZE   (1024)//(200)
 typedef struct
 {
 	float sine[TABLE_SIZE];
-	float left_phase;
-	float right_phase;
+	int left_phase;
+	int right_phase;
 	char message[20];
 }
 paTestData;
@@ -93,6 +96,8 @@ paTestData;
 */
 
 static float xxx = .01f;
+static int xx = 1;
+static float hmm = 1.0f;
 
 static int patestCallback(const void *inputBuffer, void *outputBuffer,
 	unsigned long framesPerBuffer,
@@ -108,46 +113,24 @@ static int patestCallback(const void *inputBuffer, void *outputBuffer,
 	(void)statusFlags;
 	(void)inputBuffer;
 
+	float leftTest, rightTest;
+	float xTest;
+
 	for (i = 0; i<framesPerBuffer; i++)
 	{
-		*out++ = data->left_phase;
-		*out++ = data->right_phase;
+		leftTest = data->sine[data->left_phase];
+		rightTest = data->sine[data->right_phase];
 
-		/* Generate simple sawtooth phaser that ranges between -1.0 and 1.0. */
-		data->left_phase += xxx;//0.01f;
-		/* When signal reaches top, drop back down. */
-		if (data->left_phase >= 1.0f)
-		{
-			data->left_phase -= 2.0f;
-		}
-		/* higher pitch so we can distinguish left and right. */
-		//data->right_phase += 0.03f;
+		leftTest *= hmm;
+		rightTest *= hmm;
 
-		
-		data->right_phase += xxx;//0.03f;
-		if (data->right_phase >= 1.0f)
-		{
-			data->right_phase -= 2.0f;
-			//xxx = .01;
-		}
+		*out++ = leftTest;
+		*out++ = rightTest;
 
-		xxx += .000001f;
-		if (xxx > .08)
-		{
-			xxx = .01;
-		}
-
-		//*out++ = data->sine[data->left_phase];  /* left */
-		//*out++ = data->sine[data->right_phase];  /* right */
-
-		//data->left_phase += 1;
-		//if (data->left_phase >= TABLE_SIZE) data->left_phase -= TABLE_SIZE;
-		//data->right_phase += 2;//(int)xxx;//5;//3; /* higher pitch so we can distinguish left and right. */
-		//if (data->right_phase >= TABLE_SIZE) data->right_phase -= TABLE_SIZE;
-
-		//xxx += testD;
-		//if (xxx > 10)
-		//	xxx = 0;
+		data->left_phase += xx;
+		if (data->left_phase >= TABLE_SIZE) data->left_phase -= TABLE_SIZE;
+		data->right_phase += xx;
+		if (data->right_phase >= TABLE_SIZE) data->right_phase -= TABLE_SIZE;
 	}
 
 	return paContinue;
@@ -162,28 +145,17 @@ static void StreamFinished(void* userData)
 	printf("Stream Completed: %s\n", data->message);
 }
 
+void end(PaError &err)
+{
+	Pa_Terminate();
+	fprintf(stderr, "An error occurred while using the portaudio stream\n");
+	fprintf(stderr, "Error number: %d\n", err);
+	fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
+}
+
 /*******************************************************************/
 int main(void)
 {
-	sf::RenderWindow window(sf::VideoMode(200, 200), "SFML works!");
-	sf::CircleShape shape(100.f);
-	shape.setFillColor(sf::Color::Green);
-
-	while (window.isOpen())
-	{
-		sf::Event event;
-		while (window.pollEvent(event))
-		{
-			if (event.type == sf::Event::Closed)
-				window.close();
-		}
-
-		window.clear();
-		window.draw(shape);
-		window.display();
-	}
-
-
 	PaStreamParameters outputParameters;
 	PaStream *stream;
 	PaError err;
@@ -200,12 +172,19 @@ int main(void)
 	data.left_phase = data.right_phase = 0;
 
 	err = Pa_Initialize();
-	if (err != paNoError) goto error;
+	if (err != paNoError)
+	{
+		end(err);
+		return err;
+	}
 
 	outputParameters.device = Pa_GetDefaultOutputDevice(); /* default output device */
 	if (outputParameters.device == paNoDevice) {
 		fprintf(stderr, "Error: No default output device.\n");
-		goto error;
+		{
+			end(err);
+			return err;
+		}
 	}
 	outputParameters.channelCount = 2;       /* stereo output */
 	outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
@@ -221,34 +200,81 @@ int main(void)
 		paClipOff,      /* we won't output out of range samples so don't bother clipping them */
 		patestCallback,
 		&data);
-	if (err != paNoError) goto error;
+	if (err != paNoError)
+	{
+		end(err);
+		return err;
+	}
 
 	sprintf(data.message, "No Message");
 	err = Pa_SetStreamFinishedCallback(stream, &StreamFinished);
-	if (err != paNoError) goto error;
+	if (err != paNoError)
+	{
+		end(err);
+		return err;
+	}
 
 	err = Pa_StartStream(stream);
-	if (err != paNoError) goto error;
+	if (err != paNoError)
+	{
+		end(err);
+		return err;
+	}
 
 	printf("Play for %d seconds.\n", NUM_SECONDS);
 	//Pa_Sleep(NUM_SECONDS * 1000);
 
-	while (true);
+	sf::RenderWindow window(sf::VideoMode(600, 600), "SFML works!");
+	sf::CircleShape shape(100.f);
+	shape.setFillColor(sf::Color::Green);
+
+	while (window.isOpen())
+	{
+		sf::Event event;
+		while (window.pollEvent(event))
+		{
+			if (event.type == sf::Event::Closed)
+				window.close();
+		}
+
+		Vector2i pos = sf::Mouse::getPosition();
+		float test = pos.x;
+
+		float total = test * .00001;
+		xxx = total;
+
+		float test2 = pos.y;
+		float total2 = pos.y * .001;
+
+		int testxx = round(pos.x / 25);
+
+		xx = testxx;
+
+		hmm = pos.y / 1080.f;
+
+		window.clear();
+		window.draw(shape);
+		window.display();
+	}
 
 	err = Pa_StopStream(stream);
-	if (err != paNoError) goto error;
+
+	
+	if (err != paNoError)
+	{
+		end(err);
+		return err;
+	}
 
 	err = Pa_CloseStream(stream);
-	if (err != paNoError) goto error;
+	if (err != paNoError)
+	{
+		end(err);
+		return err;
+	}
 
 	Pa_Terminate();
 	printf("Test finished.\n");
 
-	return err;
-error:
-	Pa_Terminate();
-	fprintf(stderr, "An error occurred while using the portaudio stream\n");
-	fprintf(stderr, "Error number: %d\n", err);
-	fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
 	return err;
 }
